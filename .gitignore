@@ -1,0 +1,7 @@
+/.idea
+/openCV-tutorial/videos
+/openCV-tutorial/venv
+/openCV-tutorial/.idea
+/openCV-tutorial/output
+
+/openCV-tutorial/yolo-coco/yolov3.weights
