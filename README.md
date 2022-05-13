@@ -7,4 +7,4 @@ and place it inside the openCV-tutorial/yolo-coco directory.
 
 place the video you want to detect objects inside openCV-tutorial/videos directory.
 
-and create a folder named outpu inside the openCV-tutorial directory.
+and create a folder named output inside the openCV-tutorial directory.
