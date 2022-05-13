@@ -9,7 +9,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--input", required=True, help="path to input video")
 ap.add_argument("-o", "--output", required=True, help="path to output video")
 ap.add_argument("-y", "--yolo", required=True, help="path to YOLO directory")
-ap.add_argument("-c", "--confidence", type=float, default=0.5, help="minimum probability to filter weak detections")
+ap.add_argument("-c", "--confidence", type=float, default=0.6, help="minimum probability to filter weak detections")
 ap.add_argument("-t", "--threshold", type=float, default=0.3, help="threshold when applying non-maxima suppression")
 
 args = vars(ap.parse_args())
