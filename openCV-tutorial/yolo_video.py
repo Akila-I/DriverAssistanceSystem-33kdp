@@ -138,3 +138,4 @@ print("[INFO] cleaning up...")
 writer.release()
 vs.release()
 
+# python yolo_video.py --input videos/car_chase_03.mp4 --output output/car_chase_03.avi --yolo yolo-coco
