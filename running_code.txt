@@ -1,0 +1,1 @@
+python yolo_video.py --input videos/input_video_2.mp4 --output output/dashCam-output-2.avi --yolo yolo-coco
