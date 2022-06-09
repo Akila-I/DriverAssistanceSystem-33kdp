@@ -4,6 +4,7 @@ import imutils
 from object_detection import ObjectDetection
 import math
 import time
+from kalmanfilter import KalmanFilter
 
 # Handle Arguments
 ap = argparse.ArgumentParser()
@@ -13,6 +14,8 @@ args = vars(ap.parse_args())
 
 # Initialize Object Detection
 od = ObjectDetection()
+
+kf = KalmanFilter()
 
 # Initialize Video Stream Writer
 writer = None
@@ -36,7 +39,7 @@ except:
 
 # Initialize count
 count = 0
-center_points_prev_frame = []
+bottom_mid_points_prev_frame = []
 
 tracking_objects = {}
 track_id = 0
@@ -49,7 +52,14 @@ while True:
         break
 
     # Point current frame
-    center_points_cur_frame = []
+    bottom_mid_points_cur_frame = []
+
+    # danger zone line
+    frame_height = frame.shape[0]
+    danger_zone_top = int(frame_height*(5/8))
+    danger_zone_bottom = int(frame_height*(7/8))
+
+    # cv2.rectangle(frame, (0, danger_line), (frame.shape[1], frame.shape[0]), (255, 0, 0), 1)
 
     # setting start time of processing a frame
     start = time.time()
@@ -58,44 +68,68 @@ while True:
     (class_ids, scores, boxes) = od.detect(frame)
     for box in boxes:
         (x, y, w, h) = box
-        cx = int((x + x + w) / 2)
-        cy = int((y + y + h) / 2)
-        center_points_cur_frame.append((cx, cy))
+        btx = int((x + x + w) / 2)
+        bty = int((y + h))
+        bottom_mid_points_cur_frame.append((btx, bty))
 
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
         # TODO : Warnings simple logic
         #  #if the rectangle intersecting danger zone lines : give warning
 
+        if y+h > danger_zone_top and y+h < danger_zone_bottom:
+            # print("warning")
+            cv2.putText(frame, "WARNING", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 2)
+
     # Only at the beginning we compare previous and current frame
     if count <= 2:
-        for pt in center_points_cur_frame:
-            for pt2 in center_points_prev_frame:
+        for pt in bottom_mid_points_cur_frame:
+            for pt2 in bottom_mid_points_prev_frame:
                 distance = math.hypot(pt2[0] - pt[0], pt2[1] - pt[1])
 
                 if distance < 20:
-                    tracking_objects[track_id] = pt
+                    # tracking_objects[track_id] = pt
+                    tracking_objects[track_id] = []
+                    tracking_objects[track_id].append(pt)
                     track_id += 1
     else:
 
         tracking_objects_copy = tracking_objects.copy()
-        center_points_cur_frame_copy = center_points_cur_frame.copy()
+        bottom_mid_points_cur_frame_copy = bottom_mid_points_cur_frame.copy()
 
-        for object_id, pt2 in tracking_objects_copy.items():
+        # for object_id, pt2 in tracking_objects_copy.items():
+        for object_id, points in tracking_objects_copy.items():
             object_exists = False
-            for pt in center_points_cur_frame_copy:
-                distance = math.hypot(pt2[0] - pt[0], pt2[1] - pt[1])
+            for pt in bottom_mid_points_cur_frame_copy:
+                # distance = math.hypot(pt2[0] - pt[0], pt2[1] - pt[1])
+                distance = math.hypot(points[-1][0] - pt[0], points[-1][1] - pt[1])
 
                 # Update IDs position
                 if distance < 20:
-                    # TODO : Warnings simple logic
-                    #  # get the line passing through pt and pt2
-                    #  # if the line is intersecting danger zone lines : give warning
+                    # TODO : Warnings prediction logic
+                    #  # get the predicted points of the vehicles
+                    #  # if the bottom mid point is below danger zone line : give warning
 
-                    tracking_objects[object_id] = pt
+                    # tracking_objects[object_id] = pt
+                    predicted = tracking_objects[object_id][0][0], tracking_objects[object_id][0][1]
+
+                    for btm_mid in tracking_objects[object_id]:
+                        predicted = kf.predict(btm_mid[0], btm_mid[1])
+
+                    for i in range(10):
+                        predicted = kf.predict(predicted[0], predicted[1])
+                        if predicted[0] >= 0 and predicted[1] >= 0 and predicted[0] <= frame.shape[0] and predicted[1] <= frame.shape[1]:
+                            if predicted[1] > danger_zone_top and predicted[1] < danger_zone_bottom:
+                                # print("warning")
+                                cv2.putText(frame, "WARNING", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 2)
+                        # cv2.putText(frame,str(object_id),predicted,cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),1)
+
+                    cv2.circle(frame, predicted, 5, (255, 0, 0), 2)
+
+                    tracking_objects[object_id].append(pt)
                     object_exists = True
-                    if pt in center_points_cur_frame:
-                        center_points_cur_frame.remove(pt)
+                    if pt in bottom_mid_points_cur_frame:
+                        bottom_mid_points_cur_frame.remove(pt)
 
                     continue
 
@@ -104,13 +138,19 @@ while True:
                 tracking_objects.pop(object_id)
 
         # Add new IDs found
-        for pt in center_points_cur_frame:
-            tracking_objects[track_id] = pt
+        for pt in bottom_mid_points_cur_frame:
+            # tracking_objects[track_id] = pt
+            tracking_objects[track_id] = []
+            tracking_objects[track_id].append(pt)
             track_id += 1
 
-    for object_id, pt in tracking_objects.items():
-        cv2.circle(frame, pt, 5, (0, 0, 255), -1)
-        cv2.putText(frame, str(object_id), (pt[0], pt[1] - 7), 0, 1, (0, 0, 255), 2)
+    # for object_id, pt in tracking_objects.items():
+    for object_id, points in tracking_objects.items():
+        # cv2.circle(frame, pt, 5, (0, 0, 255), -1)
+        # cv2.putText(frame, str(object_id), (pt[0], pt[1] - 7), 0, 1, (0, 0, 255), 2)
+
+        cv2.circle(frame, points[-1], 5, (0, 0, 255), -1)
+        cv2.putText(frame, str(object_id), (points[-1][0], points[-1][1] - 7), 0, 1, (0, 0, 255), 2)
 
     # setting end time of processing a frame
     end = time.time()
@@ -133,7 +173,7 @@ while True:
     print("Frames left :", (total-count))
 
     # Make a copy of the points
-    center_points_prev_frame = center_points_cur_frame.copy()
+    bottom_mid_points_prev_frame = bottom_mid_points_cur_frame.copy()
 
 writer.release()
 cap.release()
@@ -142,6 +182,7 @@ print("Output video generated")
 
 # References
 # https://pysource.com/2021/10/05/object-tracking-from-scratch-opencv-and-python/
+# https://pysource.com/2021/11/02/kalman-filter-predict-the-trajectory-of-an-object/
 
 # Command to run
 # python3 object_tracking.py --input input.mp4 --output output.avi
