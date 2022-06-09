@@ -74,7 +74,7 @@ while True:
 
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-        # TODO : Warnings simple logic
+        #  Warnings simple logic
         #  #if the rectangle intersecting danger zone lines : give warning
 
         if y+h > danger_zone_top and y+h < danger_zone_bottom:
@@ -106,7 +106,7 @@ while True:
 
                 # Update IDs position
                 if distance < 20:
-                    # TODO : Warnings prediction logic
+                    #  Warnings prediction logic
                     #  # get the predicted points of the vehicles
                     #  # if the bottom mid point is below danger zone line : give warning
 
