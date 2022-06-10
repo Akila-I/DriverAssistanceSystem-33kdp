@@ -124,7 +124,8 @@ while True:
                                 cv2.putText(frame, "WARNING", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 2)
                         # cv2.putText(frame,str(object_id),predicted,cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),1)
 
-                    cv2.circle(frame, predicted, 5, (255, 0, 0), 2)
+                    if predicted[0] >= 0 and predicted[1] >= 0 and predicted[0] <= frame.shape[0] and predicted[1] <=frame.shape[1]:
+                        cv2.circle(frame, predicted, 5, (255, 0, 0), 2)
 
                     tracking_objects[object_id].append(pt)
                     object_exists = True

@@ -10,6 +10,14 @@
 /object_tracking-tutorial/dnn_model/yolov4.weights
 /object_tracking-tutorial/dashCam.mp4
 /object_tracking-tutorial/output-dashCam.avi
+
+/object_tracking-tutorial/dashCam1.mp4
+/object_tracking-tutorial/dashCam1-output.avi
+
+/object_tracking-tutorial/dashCam2.mp4
+/object_tracking-tutorial/dashCam2-output.avi
+
+
 /object_tracking-tutorial/output-danger.avi
 /object_tracking-tutorial/output-predict2.avi
 /object_tracking-tutorial/output-predict3.avi
